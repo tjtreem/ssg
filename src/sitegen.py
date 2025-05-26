@@ -1,10 +1,11 @@
+import sys
 import os
-from src import markdown
-from src import markdown_to_html
+from . import markdown
+from . import markdown_to_html
 
 # def main(): for debug purposes only
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
     with open(from_path) as f:
@@ -22,6 +23,9 @@ def generate_page(from_path, template_path, dest_path):
         raise Exception("No title found in the markdown file")
 
     result = template_content.replace("{{ Title }}", title).replace("{{ Content }}", html_content)
+    result = result.replace('href="/', f'href="{basepath}')
+    result = result.replace('src="/', f'src="{basepath}')
+
 
     directory = os.path.dirname(dest_path)
 

@@ -1,6 +1,7 @@
+import sys
 import shutil
 import os
-from src.sitegen import generate_page
+from .sitegen import generate_page
 
 
 def copy_static_directory(source, destination):
@@ -23,35 +24,41 @@ def copy_static_directory(source, destination):
             print(f"Entering directory: {source_item_path}") # Add another log
             copy_static_directory(source_item_path, destination_item_path)
 
-def process_markdown_files(source_dir):
+def generate_pages_recursive(source_dir, basepath):
     for item in os.listdir(source_dir):
         source_path = os.path.join(source_dir, item)
         
 
         if os.path.isfile(source_path):
             if source_path.endswith(".md"):
-                destination_path = source_path.replace("content", "public").replace(".md", ".html")
+                destination_path = source_path.replace("content", OUTPUT_DIR_PATH).replace(".md", ".html")
                 
                 destination_dir = os.path.dirname(destination_path)
                 os.makedirs(destination_dir, exist_ok=True)
 
-                generate_page(source_path, "template.html", destination_path)
+                generate_page(source_path, "template.html", destination_path, basepath)
                           
         else:
-            process_markdown_files(source_path)
+            generate_pages_recursive(source_path, basepath)
 
 STATIC_DIR_PATH = "./static"
-PUBLIC_DIR_PATH = "./public"
+# PUBLIC_DIR_PATH = "./public" (for testing purposes)
+OUTPUT_DIR_PATH = "./docs"
 
 
 
 
 def main():
-    copy_static_directory(STATIC_DIR_PATH, PUBLIC_DIR_PATH)
+    if len(sys.argv) > 1:
+        basepath = sys.argv[1]
+    else:
+        basepath = "/"
 
-    generate_page("content/index.md", "template.html", "public/index.html")
+    copy_static_directory(STATIC_DIR_PATH, OUTPUT_DIR_PATH)
 
-    process_markdown_files("content")
+    generate_page("content/index.md", "template.html", os.path.join(OUTPUT_DIR_PATH, "index.html"), basepath)
+
+    generate_pages_recursive("content", basepath)
 
 if __name__ == "__main__":
     main()
